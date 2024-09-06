@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Journal App</title>
+</head>
+<body>
+  <h1>Journal App</h1>
+
+  <div id="login-register">
+    <h2>Register</h2>
+    <input type="text" id="register-username" placeholder="Username">
+    <input type="password" id="register-password" placeholder="Password">
+    <button onclick="register()">Register</button>
+
+    <h2>Login</h2>
+    <input type="text" id="login-username" placeholder="Username">
+    <input type="password" id="login-password" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div id="journal" style="display: none;">
+    <h2>Journal</h2>
+    <textarea id="entry" placeholder="Write your journal entry..."></textarea>
+    <button onclick="saveEntry()">Save Entry</button>
+    <button onclick="getEntries()">Get My Entries</button>
+
+    <div id="entries"></div>
+  </div>
+
+  <script>
+    let token = '';
+
+    function register() {
+      const username = document.getElementById('register-username').value;
+      const password = document.getElementById('register-password').value;
+
+      fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      }).then(res => res.json()).then(data => alert(data.message));
+    }
+
+    function login() {
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+
+      fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      }).then(res => res.json()).then(data => {
+        token = data.token;
+        document.getElementById('login-register').style.display = 'none';
+        document.getElementById('journal').style.display = 'block';
+      });
+    }
+
+    function saveEntry() {
+      const content = document.getElementById('entry').value;
+
+      fetch('/entries', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ content })
+      }).then(res => res.json()).then(data => alert(data.message));
+    }
+
+    function getEntries() {
+      fetch('/entries', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }).then(res => res.json()).then(data => {
+        const entriesDiv = document.getElementById('entries');
+        entriesDiv.innerHTML = '';
+        data.forEach(entry => {
+          entriesDiv.innerHTML += `<p>${entry.content} (${entry.created_at})</p>`;
+        });
+      });
+    }
+  </script>
+</body>
+</html>
